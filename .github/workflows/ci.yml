@@ -1,0 +1,39 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  acceptance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # These gates MUST pass: they prove the suite itself is sound.
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: No undefined or pending steps (cucumber --dry-run --strict)
+        run: npm run test:dry
+
+      # The Activity Ranking API does not exist yet, so the acceptance run is EXPECTED to be red:
+      # every scenario fails on a behavioural assertion against the 501 placeholder.
+      # continue-on-error keeps the workflow green so that a red typecheck/lint/dry-run stands out.
+      # Remove continue-on-error once a real implementation is wired in via API_BASE_URL.
+      - name: Acceptance suite (expected to fail until the API is implemented)
+        run: npm test
+        continue-on-error: true
+
+      - name: Upload Cucumber report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report
+          path: reports/

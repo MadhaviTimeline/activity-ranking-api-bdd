@@ -39,6 +39,8 @@ export type Fault =
   | { kind: 'no-daily' }
   | { kind: 'missing-variable'; variable: string }
   | { kind: 'short'; days: number }
+  /** Open-Meteo returns null where a model has no value; days 3-5 of the variable become null. */
+  | { kind: 'null-values'; variable: string }
   | { kind: 'open-meteo-error' }
   | { kind: 'delay'; ms: number };
 
@@ -282,7 +284,11 @@ export class OpenMeteoStub {
     const dailyUnits: Record<string, string> = { time: 'iso8601' };
     for (const variable of variables) {
       if (fault?.kind === 'missing-variable' && fault.variable === variable) continue;
-      daily[variable] = (fixture.daily[variable] ?? []).slice(0, dayCount);
+      const values = (fixture.daily[variable] ?? []).slice(0, dayCount);
+      daily[variable] =
+        fault?.kind === 'null-values' && fault.variable === variable
+          ? values.map((v, i) => (i >= 2 && i <= 4 ? null : v))
+          : values;
       dailyUnits[variable] = fixture.daily_units[variable] ?? '';
     }
 

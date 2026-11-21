@@ -84,6 +84,7 @@ const FAULTS: Record<string, Fault> = {
   'no daily section': { kind: 'no-daily' },
   'no snowfall values': { kind: 'missing-variable', variable: 'snowfall_sum' },
   'only 3 days of data': { kind: 'short', days: 3 },
+  'gaps in the daily temperatures': { kind: 'null-values', variable: 'temperature_2m_max' },
   'an Open-Meteo error message': { kind: 'open-meteo-error' },
 };
 

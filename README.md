@@ -13,7 +13,7 @@ pointed at it with `API_BASE_URL`, becomes its acceptance gate.
 |            |                                                                                         |
 | ---------- | --------------------------------------------------------------------------------------- |
 | Stack      | TypeScript (strict) · Cucumber.js · zod · `expect` · Node's built-in `fetch` and `http` |
-| Scenarios  | 43 written (77 once outlines expand), plus 3 opt-in `@live`                             |
+| Scenarios  | 43 written (78 once outlines expand), plus 3 opt-in `@live`                             |
 | Open-Meteo | Fully stubbed by a programmable in-process server; the default run needs no network     |
 
 ---
@@ -86,7 +86,7 @@ Look-ups by id use the geocoding sibling route `/geocoding/get?id=` (real: `/v1/
 | `@ranking`    | 14        | Weather → ranking rules, including metamorphic checks |
 | `@reasoning`  | 7         | Human-readable reasons                                |
 | `@validation` | 22        | 400 / 404 / 409 handling                              |
-| `@resilience` | 11        | Open-Meteo faults, timeouts, request parameters sent  |
+| `@resilience` | 12        | Open-Meteo faults, timeouts, request parameters sent  |
 | `@ux`         | 32        | Behaviour driven by the front end                     |
 | `@smoke`      | 11        | Fast, high-value subset                               |
 | `@live`       | 3         | Real Open-Meteo drift check (excluded by default)     |
@@ -177,7 +177,7 @@ Rules the suite pins down:
 | Missing, blank or whitespace-only input; length < 2 or > 100; both `city` and `locationId`; non-integer `locationId`; `limit` out of range | 400    | `INVALID_REQUEST` (message names the parameter)                              |
 | No match / unknown `locationId`                                                                                                            | 404    | `LOCATION_NOT_FOUND`                                                         |
 | Name matches several places ("Springfield")                                                                                                | 409    | `AMBIGUOUS_LOCATION`; `details.candidates` has the `/locations` result shape |
-| Open-Meteo 5xx, error body, invalid JSON, missing or short data                                                                            | 502    | `UPSTREAM_UNAVAILABLE`                                                       |
+| Open-Meteo 5xx, error body, invalid JSON, missing, short or null-gapped data                                                               | 502    | `UPSTREAM_UNAVAILABLE`                                                       |
 | Open-Meteo slower than `OPEN_METEO_TIMEOUT_MS`                                                                                             | 504    | `UPSTREAM_TIMEOUT`                                                           |
 
 Errors are always `application/json`, with no stack traces and no upstream URLs. Validation
@@ -250,9 +250,13 @@ The trade-off is that a stub can drift from reality, which is what `@live` exist
 - **The tie-break** check uses a hot, dry inland week, where Skiing and Surfing should both
   bottom out. If the implementation never produces a tie there, the check passes without being
   exercised.
-- **The suite's own logic is only proven against the 501 placeholder.** A throwaway reference
-  implementation on a separate `reference-impl` branch would prove the assertions can go green.
-  This is offered as a next step, not done.
+- **Proving the suite itself:** a throwaway reference implementation lives on the
+  [`reference-impl`](../../tree/reference-impl) branch, which is never merged. Against it, the
+  suite is fully green (`npm run test:reference` on that branch). It also found one real bug in
+  the suite: step arity, now fixed. **Mutation check:** 7 bugs were deliberately planted, and the
+  suite caught 5. The two survivors were a "null forecast values become 0" bug, which led to a
+  null-gap scenario that now catches it, and moving the EXCELLENT boundary from 80 to 81. No
+  fixture happens to score exactly 80, which confirms the band limitation above.
 - **Not covered (future work):** authentication, rate limiting, caching and upstream call
   de-duplication, retries/back-off, i18n of reasons, performance and load, accessibility of
   reason text, and Open-Meteo's own rate limits.
@@ -294,9 +298,10 @@ step definitions and most of this README from a written brief (`CLAUDE.md`), and
 real Open-Meteo docs for parameter names and units. The human author wrote the brief, reviewed and
 approved the feature files before any automation began, and decided the open contract questions
 the AI raised (strict 409 for ambiguous names, graceful degradation when the marine API is down,
-the tie-break order, no reference implementation for now). The AI also flagged its own departures from the brief (injection input
+the tie-break order) and asked for the reference implementation. The AI also flagged its own departures from the brief (injection input
 → 400 or 404, a band table instead of a boundary outline), and these are documented above.
-Everything was run locally: typecheck, lint, strict dry run, the red run and the live drift check.
+Everything was run locally: typecheck, lint, strict dry run, the red run, the live drift check,
+the green run against the reference implementation, and the mutation check.
 
 ---
 
@@ -314,13 +319,13 @@ Everything was run locally: typecheck, lint, strict dry run, the red run and the
              {"error":{"code":"NOT_IMPLEMENTED","message":"The Activity Ranking API has not been implemented yet.", …}}
 
   …
-  77 scenarios (77 failed)
-  460 steps (279 passed, 104 skipped, 77 failed)
+  78 scenarios (78 failed)
+  467 steps (284 passed, 105 skipped, 78 failed)
 ```
 
-The 77 failures break down as: 45 rankings or search calls expecting 200 that received 501, 29
+The 78 failures break down as: 45 rankings or search calls expecting 200 that received 501, 30
 expected errors (400/404/409/502/504) that received 501, 1 forecast request that never reached
-Open-Meteo, and 2 injection-input checks. The 279 passing steps are the `Given` set-up steps
+Open-Meteo, and 2 injection-input checks. The 284 passing steps are the `Given` set-up steps
 (stub programming, fixtures) and the request steps, which shows the harness itself works.
 
 ## Project layout

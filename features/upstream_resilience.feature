@@ -40,6 +40,7 @@ Feature: Resilience to Open-Meteo problems
       | no daily section                 |
       | no snowfall values               |
       | only 3 days of data              |
+      | gaps in the daily temperatures   |
       | an Open-Meteo error message      |
 
   Scenario: A slow forecast service times out within the time budget

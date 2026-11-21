@@ -1,0 +1,27 @@
+{
+  "description": "Unstable air: thunderstorms with heavy downpours every day.",
+  "daily_units": {
+    "weather_code": "wmo code",
+    "temperature_2m_max": "°C",
+    "temperature_2m_min": "°C",
+    "precipitation_sum": "mm",
+    "rain_sum": "mm",
+    "snowfall_sum": "cm",
+    "precipitation_probability_max": "%",
+    "wind_speed_10m_max": "km/h",
+    "wind_gusts_10m_max": "km/h",
+    "sunshine_duration": "s"
+  },
+  "daily": {
+    "weather_code": [95, 95, 96, 95, 95, 96, 95],
+    "temperature_2m_max": [19.4, 18.7, 20.1, 18.2, 19, 19.8, 18.5],
+    "temperature_2m_min": [13.2, 12.9, 13.8, 12.4, 13, 13.5, 12.7],
+    "precipitation_sum": [28.6, 31.2, 24, 35.5, 26.3, 29.9, 33.1],
+    "rain_sum": [28.6, 31.2, 24, 35.5, 26.3, 29.9, 33.1],
+    "snowfall_sum": [0, 0, 0, 0, 0, 0, 0],
+    "precipitation_probability_max": [90, 90, 90, 90, 90, 90, 90],
+    "wind_speed_10m_max": [42, 47, 39, 51, 44, 46, 49],
+    "wind_gusts_10m_max": [67.2, 75.2, 62.4, 81.6, 70.4, 73.6, 78.4],
+    "sunshine_duration": [3960, 2880, 5760, 1800, 4320, 3240, 2160]
+  }
+}

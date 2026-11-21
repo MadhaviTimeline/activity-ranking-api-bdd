@@ -1,0 +1,13 @@
+{
+  "description": "Long-period groundswell, 2.5 to 3.4 m.",
+  "daily_units": {
+    "wave_height_max": "m",
+    "wave_period_max": "s",
+    "swell_wave_height_max": "m"
+  },
+  "daily": {
+    "wave_height_max": [2.8, 3.2, 2.6, 3.4, 2.9, 2.5, 3],
+    "wave_period_max": [13.1, 14, 12.4, 14.6, 13.3, 12, 13.7],
+    "swell_wave_height_max": [2.5, 2.9, 2.3, 3.1, 2.6, 2.2, 2.7]
+  }
+}

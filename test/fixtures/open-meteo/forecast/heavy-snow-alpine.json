@@ -1,0 +1,27 @@
+{
+  "description": "Deep winter in the Alps: heavy snowfall and sub-zero temperatures every day.",
+  "daily_units": {
+    "weather_code": "wmo code",
+    "temperature_2m_max": "°C",
+    "temperature_2m_min": "°C",
+    "precipitation_sum": "mm",
+    "rain_sum": "mm",
+    "snowfall_sum": "cm",
+    "precipitation_probability_max": "%",
+    "wind_speed_10m_max": "km/h",
+    "wind_gusts_10m_max": "km/h",
+    "sunshine_duration": "s"
+  },
+  "daily": {
+    "weather_code": [75, 75, 73, 75, 73, 71, 75],
+    "temperature_2m_max": [-6.2, -7.9, -5.4, -8.8, -4.1, -3, -6.6],
+    "temperature_2m_min": [-14.8, -16.1, -13, -17.5, -12.2, -10.9, -15.3],
+    "precipitation_sum": [50.6, 58.6, 26.7, 41.9, 20.3, 9.7, 46.4],
+    "rain_sum": [0, 0, 0, 0, 0, 0, 0],
+    "snowfall_sum": [35.4, 41, 18.7, 29.3, 14.2, 6.8, 32.5],
+    "precipitation_probability_max": [90, 90, 90, 90, 90, 90, 90],
+    "wind_speed_10m_max": [22, 26, 15, 30, 12, 10, 24],
+    "wind_gusts_10m_max": [35.2, 41.6, 24, 48, 19.2, 16, 38.4],
+    "sunshine_duration": [1800, 720, 6480, 0, 9360, 14040, 2520]
+  }
+}

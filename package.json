@@ -1,0 +1,33 @@
+{
+  "name": "activity-ranking-api-bdd",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Specification-first BDD acceptance suite for the (not yet built) Activity Ranking API",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "cucumber-js",
+    "test:smoke": "cucumber-js --profile smoke",
+    "test:live": "cucumber-js --profile live",
+    "test:dry": "cucumber-js --dry-run --strict",
+    "placeholder": "tsx placeholder-sut/server.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.3.0",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.19.2",
+    "eslint": "^10.15.0",
+    "expect": "^30.5.2",
+    "prettier": "^3.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.73.0",
+    "zod": "^4.6.7"
+  }
+}

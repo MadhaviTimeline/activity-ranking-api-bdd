@@ -156,7 +156,9 @@ Then(
 
 Then(
   'no reason contains raw codes or placeholders such as {string}, {string}, {string}, {string} or {string}',
-  function (this: ApiWorld, ...tokens: string[]) {
+  // Explicit parameters: Cucumber checks the function arity, so rest parameters (length 0) are rejected.
+  function (this: ApiWorld, a: string, b: string, c: string, d: string, e: string) {
+    const tokens = [a, b, c, d, e];
     const patterns = [
       ...tokens.map((t) => new RegExp(`\\b${t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')),
       /\b[a-z]+(?:_[a-z0-9]+)+\b/, // snake_case field names such as snowfall_sum
@@ -174,7 +176,8 @@ Then(
 
 Then(
   'no reason uses imperial units such as {string}, {string}, {string} or {string}',
-  function (this: ApiWorld, ...units: string[]) {
+  function (this: ApiWorld, a: string, b: string, c: string, d: string) {
+    const units = [a, b, c, d];
     const patterns = units.map((u) =>
       u.startsWith('°') ? new RegExp(u) : new RegExp(`\\d\\s*${u}\\b|\\b${u}\\b`, 'i'),
     );

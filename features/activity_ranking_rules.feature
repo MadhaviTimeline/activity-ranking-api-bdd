@@ -8,24 +8,6 @@ Feature: Ranking activities by weather suitability
   relative assertions ("ranks above", "ranks first", "is POOR") and metamorphic checks
   ("more snow never lowers the Skiing score") instead of asserting exact numbers.
 
-  Scenario: Heavy snow and sub-zero temperatures in a mountain resort favour skiing
-    Given a "heavy-snow-alpine" week is forecast for "Zermatt"
-    When I request activity rankings for "Zermatt"
-    Then Skiing ranks 1st on every day
-    And Surfing ranks in the bottom two on every day
-
-  Scenario: A large swell on a mild coast favours surfing over skiing
-    Given a "big-swell-coastal" week is forecast for "Newquay"
-    When I request activity rankings for "Newquay"
-    Then Surfing ranks above Skiing on every day
-    And Surfing is rated FAIR or better on every day
-
-  Scenario: Clear skies and around 22°C favour outdoor sightseeing
-    Given a "clear-warm" week is forecast for "Seville"
-    When I request activity rankings for "Seville"
-    Then Outdoor Sightseeing ranks 1st on every day
-    And Outdoor Sightseeing is rated GOOD or better on every day
-
   Scenario Outline: Severe weather favours indoor sightseeing (<weather>)
     Given a "<forecast>" week is forecast for "Edinburgh"
     When I request activity rankings for "Edinburgh"

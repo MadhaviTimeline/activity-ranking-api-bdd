@@ -233,7 +233,7 @@ Suggested tags: `@smoke`, `@contract`, `@search`, `@ranking`, `@reasoning`, `@va
    - Unknown city → 404 `LOCATION_NOT_FOUND`
    - Ambiguous city ("Springfield") → 409 with candidates list
 
-6. **`upstream_resilience.feature`** `@resilience`
+6. **`open_meteo_failures.feature`** `@resilience`
    - Forecast API 500 → 502 `UPSTREAM_UNAVAILABLE`, no partial/fake data
    - Malformed JSON / missing daily fields → 502
    - Slow upstream → 504 within the timeout budget

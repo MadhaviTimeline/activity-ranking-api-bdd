@@ -4,16 +4,17 @@ Acceptance tests, written **before the code exists**, for an API that takes a ci
 returns a 7-day ranked list of activities (Skiing, Surfing, Outdoor Sightseeing, Indoor
 Sightseeing) based on the Open-Meteo forecast.
 
-**The build is red on purpose.** There is no implementation yet. A placeholder service answers
-`501 Not Implemented` on every route, so every scenario fails on a behavioural assertion such as
-`Expected HTTP 200 (activity rankings returned) but received HTTP 501`. Nothing fails on
-connection errors, undefined steps or TypeScript errors. Once the API is built, the same suite,
-pointed at it with `API_BASE_URL`, becomes its acceptance gate.
+**The default test run is red on purpose.** There is no implementation yet. A placeholder service
+answers `501 Not Implemented` on every route, so the default scenarios fail on behavioural
+assertions such as `Expected HTTP 200 (activity rankings returned) but received HTTP 501`.
+Nothing fails on connection errors, undefined steps or TypeScript errors. The opt-in `@live`
+scenarios are excluded from the default run. Once the API is built, the same suite, pointed at it
+with `API_BASE_URL`, becomes its acceptance gate.
 
 |            |                                                                                         |
 | ---------- | --------------------------------------------------------------------------------------- |
 | Stack      | TypeScript (strict) · Cucumber.js · zod · `expect` · Node's built-in `fetch` and `http` |
-| Scenarios  | 43 written (78 once outlines expand), plus 3 opt-in `@live`                             |
+| Scenarios  | 42 written in the default suite (83 after outline expansion), plus 3 opt-in `@live`       |
 | Open-Meteo | Fully stubbed by a programmable in-process server; the default run needs no network     |
 
 ---
@@ -33,22 +34,25 @@ npm run test:live     # @live: hits the real Open-Meteo to detect fixture drift 
 
 Reports are written to `reports/cucumber-report.html` and `.json`.
 
-**Against a real implementation**
+**When a real API is available**
 
-```bash
-API_BASE_URL=http://localhost:8080 npm test
-```
+1. Start the API with its Open-Meteo URLs set to the test stub URLs below.
+2. In a terminal, set `API_BASE_URL` to the API's address and run the tests:
 
-When `API_BASE_URL` is set, the placeholder is not started. The implementation must read its
-upstream URLs from the environment so that it talks to the stub, which listens on `STUB_PORT`
-(default 4010):
+   ```powershell
+   $env:API_BASE_URL = "http://localhost:8080"
+   npm.cmd test
+   ```
 
-| Env var (read by the API)  | Value for the tests                      | Real value                                       |
-| -------------------------- | ---------------------------------------- | ------------------------------------------------ |
+The tests start the Open-Meteo stub automatically on `STUB_PORT` (default `4010`). When
+`API_BASE_URL` is set, the 501 placeholder is not started.
+
+| API setting                | Value for tests                         | Example production value                        |
+| -------------------------- | --------------------------------------- | ----------------------------------------------- |
 | `OPEN_METEO_GEOCODING_URL` | `http://localhost:4010/geocoding/search` | `https://geocoding-api.open-meteo.com/v1/search` |
-| `OPEN_METEO_FORECAST_URL`  | `http://localhost:4010/forecast`         | `https://api.open-meteo.com/v1/forecast`         |
-| `OPEN_METEO_MARINE_URL`    | `http://localhost:4010/marine`           | `https://marine-api.open-meteo.com/v1/marine`    |
-| `OPEN_METEO_TIMEOUT_MS`    | `5000`                                   |                                                  |
+| `OPEN_METEO_FORECAST_URL`  | `http://localhost:4010/forecast`        | `https://api.open-meteo.com/v1/forecast`        |
+| `OPEN_METEO_MARINE_URL`    | `http://localhost:4010/marine`          | `https://marine-api.open-meteo.com/v1/marine`   |
+| `OPEN_METEO_TIMEOUT_MS`    | `5000`                                  | `5000`                                          |
 
 Look-ups by id use the geocoding sibling route `/geocoding/get?id=` (real: `/v1/get`).
 
@@ -68,6 +72,10 @@ Look-ups by id use the geocoding sibling route `/geocoding/get?id=` (real: `/v1/
   the suite never asserts an exact score. It asserts outcomes ("Skiing ranks 1st in heavy snow",
   "Surfing ranks above Skiing in a big swell") and invariants ("with everything else equal, more
   snow never lowers the Skiing score; more rain never raises the Outdoor score").
+- **Multi-city ranking rules.** `features/multi_city_ranking_rules.feature` applies the same
+  weather-to-activity expectations to multiple places: mountain resorts, coastal towns and cities
+  with clear, warm forecasts. This checks that the expected ranking follows the weather scenario,
+  rather than being tied to one hard-coded city.
 - **Contract as code.** `src/contract/schemas.ts` (zod) is the executable contract and the source
   of every TypeScript type (`z.infer`). Schema failures list each offending JSON path.
 - **Failures readable by a developer who has never seen the suite.** Each failure states what was
@@ -82,13 +90,13 @@ Look-ups by id use the geocoding sibling route `/geocoding/get?id=` (real: `/v1/
 | Tag           | Scenarios | Purpose                                               |
 | ------------- | --------- | ----------------------------------------------------- |
 | `@search`     | 23        | Location search / autocomplete                        |
-| `@contract`   | 9         | Response shape, days, ranks, bands, tie-break         |
-| `@ranking`    | 14        | Weather → ranking rules, including metamorphic checks |
+| `@contract`   | 11        | Response shape, days, ranks, bands, tie-break         |
+| `@ranking`    | 17        | Multi-city weather-to-ranking and metamorphic checks |
 | `@reasoning`  | 7         | Human-readable reasons                                |
 | `@validation` | 22        | 400 / 404 / 409 handling                              |
 | `@resilience` | 12        | Open-Meteo faults, timeouts, request parameters sent  |
 | `@ux`         | 32        | Behaviour driven by the front end                     |
-| `@smoke`      | 11        | Fast, high-value subset                               |
+| `@smoke`      | 13        | Fast, high-value subset                               |
 | `@live`       | 3         | Real Open-Meteo drift check (excluded by default)     |
 
 Counts are executed scenarios, after outline expansion.
@@ -180,7 +188,7 @@ Rules the suite pins down:
 | Open-Meteo 5xx, error body, invalid JSON, missing, short or null-gapped data                                                               | 502    | `UPSTREAM_UNAVAILABLE`                                                       |
 | Open-Meteo slower than `OPEN_METEO_TIMEOUT_MS`                                                                                             | 504    | `UPSTREAM_TIMEOUT`                                                           |
 
-Errors are always `application/json`, with no stack traces and no upstream URLs. Validation
+Errors are always `application/json`, with no stack traces and no Open-Meteo URLs. Validation
 failures must not call Open-Meteo at all, and the stub verifies this.
 
 ---
@@ -238,7 +246,7 @@ The trade-off is that a stub can drift from reality, which is what `@live` exist
    names contain apostrophes (L'Aquila), so blanket rejection would be wrong. The requirement is
    a safe envelope with no HTML in the message.
 7. Rankings take no `limit`. A non-integer `locationId` (`abc`, `12.5`) is a 400.
-8. Validation (400) happens before any upstream call.
+8. Validation (400) happens before any Open-Meteo request.
 
 ## Omissions and trade-offs
 
@@ -257,7 +265,7 @@ The trade-off is that a stub can drift from reality, which is what `@live` exist
   suite caught 5. The two survivors were a "null forecast values become 0" bug, which led to a
   null-gap scenario that now catches it, and moving the EXCELLENT boundary from 80 to 81. No
   fixture happens to score exactly 80, which confirms the band limitation above.
-- **Not covered (future work):** authentication, rate limiting, caching and upstream call
+- **Not covered (future work):** authentication, rate limiting, caching and Open-Meteo call
   de-duplication, retries/back-off, i18n of reasons, performance and load, accessibility of
   reason text, and Open-Meteo's own rate limits.
 - **Stub vs WireMock or mockttp:** a ~300-line TS stub gives typed fixtures, runs in-process with
@@ -283,8 +291,8 @@ The trade-off is that a stub can drift from reality, which is what `@live` exist
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Accepts a city or town name                                 | `activity_rankings_contract`: exact city name; `input_validation`: 404 / 409   |
 | Partial name returns a list of possible matches             | `location_search`: partial name, ordering, case, Unicode, limit, empty list    |
-| Fetches 7-day weather from Open-Meteo                       | `upstream_resilience`: request parameters sent; `live_open_meteo`              |
-| Ranks each day for each activity                            | `activity_rankings_contract`: 4 per day, ranks; `activity_ranking_rules` (all) |
+| Fetches 7-day weather from Open-Meteo                       | `open_meteo_failures`: request parameters sent; `live_open_meteo`              |
+| Ranks each day for each activity                            | Contract: 4 activities per day and score order; multi-city rules: weather suitability; activity rules: per-day and metamorphic checks |
 | Response has date, activity, suitability measure, reasoning | `activity_rankings_contract`: schema, bands; `reasoning` (all)                 |
 | Decision: API contract                                      | This README, `src/contract/schemas.ts`                                         |
 | Decision: Open-Meteo dependency                             | Stub, fixtures, `@resilience`, `@live`                                         |
@@ -308,25 +316,24 @@ the green run against the reference implementation, and the mutation check.
 ## Sample red output (expected)
 
 ```text
-  1) Unusable input is rejected before any weather lookup (no location given) # features\input_validation.feature:18
-       Then the request is rejected as invalid with a message about "city"
-           Expected HTTP 400 with error code INVALID_REQUEST
+  1) Severe weather favours indoor sightseeing (persistent heavy rain) # features\activity_ranking_rules.feature:19
+       Then Indoor Sightseeing ranks 1st on every day
+           Expected HTTP 200 (activity rankings returned)
            but received HTTP 501.
 
            Response:
-             GET http://localhost:3000/api/v1/activity-rankings
+             GET http://localhost:3000/api/v1/activity-rankings?city=Edinburgh
              → 501 application/json; charset=utf-8
-             {"error":{"code":"NOT_IMPLEMENTED","message":"The Activity Ranking API has not been implemented yet.", …}}
+             {"error":{"code":"NOT_IMPLEMENTED","message":"The Activity Ranking API has not been implemented yet.","details":{"method":"GET","path":"/api/v1/activity-rankings"}}}
 
   …
-  78 scenarios (78 failed)
-  467 steps (284 passed, 105 skipped, 78 failed)
+  83 scenarios (83 failed)
+  496 steps (301 passed, 112 skipped, 83 failed)
 ```
 
-The 78 failures break down as: 45 rankings or search calls expecting 200 that received 501, 30
-expected errors (400/404/409/502/504) that received 501, 1 forecast request that never reached
-Open-Meteo, and 2 injection-input checks. The 284 passing steps are the `Given` set-up steps
-(stub programming, fixtures) and the request steps, which shows the harness itself works.
+The 83 default scenarios fail because the placeholder returns 501 instead of the API responses
+they specify. Setup and request steps pass, showing that the test harness runs and reaches the
+placeholder; dependent assertions are skipped after the first failure.
 
 ## Project layout
 

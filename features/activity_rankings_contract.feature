@@ -7,16 +7,15 @@ Feature: Activity rankings response contract
   Scores themselves are owned by the implementation; this feature pins down the shape,
   the day/activity coverage, the ordering rules and the score-to-band mapping.
 
-  Background:
-    Given a "mixed-week-alpine" week is forecast for "Zermatt"
-
   Scenario: Rankings for an exact city name echo the resolved location
+    Given a "mixed-week-alpine" week is forecast for "Zermatt"
     When I request activity rankings for "Zermatt"
     Then the rankings are returned
     And the rankings are for "Zermatt" in "Switzerland" with timezone "Europe/Zurich"
     And the rankings response matches the activity rankings contract
 
   Scenario: The forecast covers 7 consecutive days starting today in the location's timezone
+    Given a "mixed-week-alpine" week is forecast for "Zermatt"
     When I request activity rankings for "Zermatt"
     Then the rankings cover exactly 7 consecutive days
     And the first day is today's date in "Europe/Zurich"
@@ -33,6 +32,7 @@ Feature: Activity rankings response contract
       | Honolulu | Pacific/Honolulu |
 
   Scenario: Every day ranks each of the four activities exactly once
+    Given a "mixed-week-alpine" week is forecast for "Zermatt"
     When I request activity rankings for "Zermatt"
     Then every day ranks exactly these activities once each:
       | activity            | display name        |
@@ -42,12 +42,14 @@ Feature: Activity rankings response contract
       | INDOOR_SIGHTSEEING  | Indoor Sightseeing  |
 
   Scenario: Ranks run 1 to 4 and follow the score, highest first
+    Given a "mixed-week-alpine" week is forecast for "Zermatt"
     When I request activity rankings for "Zermatt"
     Then every day's ranks are 1, 2, 3 and 4 with no duplicates
     And every day is ordered by score from highest to lowest
     And every score is a whole number from 0 to 100
 
   Scenario: Suitability labels match the documented score bands
+    Given a "mixed-week-alpine" week is forecast for "Zermatt"
     When I request activity rankings for "Zermatt"
     Then every suitability label matches its score according to these bands:
       | suitability | lowest score | highest score |
@@ -68,6 +70,7 @@ Feature: Activity rankings response contract
       | INDOOR_SIGHTSEEING  |
 
   Scenario: Ranking by location id gives the same result as ranking by city name
+    Given a "mixed-week-alpine" week is forecast for "Zermatt"
     Given I have searched for "Zermatt" and picked the first match
     When I request activity rankings for the picked location
     Then the rankings are returned

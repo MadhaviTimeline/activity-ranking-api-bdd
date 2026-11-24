@@ -1,5 +1,5 @@
 @resilience
-Feature: Resilience to Open-Meteo problems
+Feature: Handling Open-Meteo failures
   As a user
   I want a clear error, never made-up data, when the weather provider misbehaves
   So that I don't plan my week around a ranking that isn't based on a real forecast

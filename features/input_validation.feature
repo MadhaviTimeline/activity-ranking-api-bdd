@@ -24,11 +24,12 @@ Feature: Validating activity ranking requests
       | location id not a number     | locationId=abc              | locationId |
       | location id not whole        | locationId=12.5             | locationId |
 
-  Scenario Outline: Injection-like input is handled safely (<description>)
+  Scenario Outline: Injection-like input is rejected before any weather lookup (<description>)
     When I request activity rankings for "<city>"
-    Then the request is refused as invalid or not found
+    Then the request is rejected as invalid with a message about "city"
     And the error response is safe to show to users
     And the error message contains no HTML markup
+    And the weather service was not contacted
 
     Examples:
       | description     | city                          |

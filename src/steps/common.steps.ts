@@ -25,14 +25,6 @@ Then(
   },
 );
 
-Then('the request is refused as invalid or not found', function (this: ApiWorld) {
-  const res = this.response;
-  if (res.status === 400) expectError(res, 400, 'INVALID_REQUEST');
-  else if (res.status === 404) expectError(res, 404, 'LOCATION_NOT_FOUND');
-  else
-    fail(res, 'HTTP 400 INVALID_REQUEST or 404 LOCATION_NOT_FOUND', `received HTTP ${res.status}`);
-});
-
 Then('the location is reported as not found', function (this: ApiWorld) {
   expectError(this.response, 404, 'LOCATION_NOT_FOUND');
 });

@@ -1,38 +1,33 @@
 # Activity Ranking API: specification-first BDD suite
 
-Acceptance tests, written **before the code exists**, for an API that takes a city or town and
-returns a 7-day ranked list of activities (Skiing, Surfing, Outdoor Sightseeing, Indoor
-Sightseeing) based on the Open-Meteo forecast.
+**What:** A TypeScript and Cucumber.js BDD suite specifying a 7-day, weather-based activity
+ranking API. The Gherkin scenarios and Zod schemas define the proposed API contract.
 
-**The default test run is red on purpose.** There is no implementation yet. A placeholder service
-answers `501 Not Implemented` on every route, so the default scenarios fail on behavioural
-assertions such as `Expected HTTP 200 (activity rankings returned) but received HTTP 501`.
-Nothing fails on connection errors, undefined steps or TypeScript errors. The opt-in `@live`
-scenarios are excluded from the default run. Once the API is built, the same suite, pointed at it
-with `API_BASE_URL`, becomes its acceptance gate.
+**Why:** The API is intentionally not implemented. A placeholder returns `501 Not Implemented`,
+so tests show a meaningful red result instead of a connection error.
 
-|            |                                                                                         |
-| ---------- | --------------------------------------------------------------------------------------- |
-| Stack      | TypeScript (strict) · Cucumber.js · zod · `expect` · Node's built-in `fetch` and `http` |
-| Scenarios  | 42 written in the default suite (83 after outline expansion), plus 3 opt-in `@live`       |
-| Open-Meteo | Fully stubbed by a programmable in-process server; the default run needs no network     |
+**How:** A local Open-Meteo HTTP stub serves fixed fixtures for repeatable, offline tests. The
+Cucumber hooks start the stub and placeholder automatically.
 
----
+**What to expect:** The default run has 83 expanded scenarios; they fail against the placeholder
+with HTTP 501. The strict dry run, typecheck and lint should pass. Three `@live` scenarios are
+optional and excluded by default.
 
-## How to run
+## Quick start
 
-Prerequisites: Node 24 LTS (see `.nvmrc`; Node 22 or later works).
+Requires Node.js 22 or later. In PowerShell, run:
 
-```bash
-npm ci
-npm test              # full suite against the 501 placeholder → red (expected)
-npm run test:smoke    # @smoke subset
-npm run test:dry      # cucumber --dry-run --strict: fails if any step is undefined/pending
-npm run typecheck && npm run lint
-npm run test:live     # @live: hits the real Open-Meteo to detect fixture drift (needs network)
+```powershell
+npm.cmd ci
+npm.cmd run test:dry
+npm.cmd run typecheck
+npm.cmd run lint
+npm.cmd test
 ```
 
-Reports are written to `reports/cucumber-report.html` and `.json`.
+`npm.cmd test` is expected to be red until the API exists. Reports are written to
+`reports/cucumber-report.html` and `.json`. To check the real Open-Meteo API, run
+`npm.cmd run test:live` (requires network access).
 
 **When a real API is available**
 
@@ -182,7 +177,7 @@ Rules the suite pins down:
 
 | Situation                                                                                                                                  | Status | `code`                                                                       |
 | ------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------------------------- |
-| Missing, blank or whitespace-only input; length < 2 or > 100; both `city` and `locationId`; non-integer `locationId`; `limit` out of range | 400    | `INVALID_REQUEST` (message names the parameter)                              |
+| Missing, blank or whitespace-only input; length < 2 or > 100; both `city` and `locationId`; non-integer `locationId`; `limit` out of range; injection-like input | 400    | `INVALID_REQUEST` (message names the parameter)                              |
 | No match / unknown `locationId`                                                                                                            | 404    | `LOCATION_NOT_FOUND`                                                         |
 | Name matches several places ("Springfield")                                                                                                | 409    | `AMBIGUOUS_LOCATION`; `details.candidates` has the `/locations` result shape |
 | Open-Meteo 5xx, error body, invalid JSON, missing, short or null-gapped data                                                               | 502    | `UPSTREAM_UNAVAILABLE`                                                       |
@@ -242,9 +237,9 @@ The trade-off is that a stub can drift from reality, which is what `@live` exist
 5. **Marine API down, forecast up → graceful degradation:** the service still returns 200 with
    the other activities ranked normally, and Surfing rated `POOR` with a reason saying wave data
    is unavailable. A 502 for the whole request would hide a usable forecast from the user.
-6. Injection-like input (`'; DROP TABLE…`, `<script>`) may return **400 or 404**. Real place
-   names contain apostrophes (L'Aquila), so blanket rejection would be wrong. The requirement is
-   a safe envelope with no HTML in the message.
+6. Injection-like input (`'; DROP TABLE…`, `<script>`) returns **400 `INVALID_REQUEST`** without
+   calling Open-Meteo. The response is safe to display and contains no HTML. Real place names can
+   contain apostrophes (L'Aquila), so validation must not reject every apostrophe.
 7. Rankings take no `limit`. A non-integer `locationId` (`abc`, `12.5`) is a 400.
 8. Validation (400) happens before any Open-Meteo request.
 
@@ -306,8 +301,9 @@ step definitions and most of this README from a written brief (`CLAUDE.md`), and
 real Open-Meteo docs for parameter names and units. The human author wrote the brief, reviewed and
 approved the feature files before any automation began, and decided the open contract questions
 the AI raised (strict 409 for ambiguous names, graceful degradation when the marine API is down,
-the tie-break order) and asked for the reference implementation. The AI also flagged its own departures from the brief (injection input
-→ 400 or 404, a band table instead of a boundary outline), and these are documented above.
+the tie-break order) and asked for the reference implementation. One documented departure is the
+score-band boundary check: the suite checks the band table against returned scores rather than
+forcing the service to produce specific boundary scores.
 Everything was run locally: typecheck, lint, strict dry run, the red run, the live drift check,
 the green run against the reference implementation, and the mutation check.
 
@@ -328,7 +324,7 @@ the green run against the reference implementation, and the mutation check.
 
   …
   83 scenarios (83 failed)
-  496 steps (301 passed, 112 skipped, 83 failed)
+  498 steps (301 passed, 114 skipped, 83 failed)
 ```
 
 The 83 default scenarios fail because the placeholder returns 501 instead of the API responses
